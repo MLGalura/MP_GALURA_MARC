@@ -7,18 +7,6 @@ SECTION: S11
 DATE: JUNE 2, 2022
 *************************************************************/
 
-
-//Current Checklist
-// O Ship Model with Normal Mapping
-// O Unlit main planet that rotates
-// O 5 Different debris objects
-// O WASD Movement
-// ~ 3rd Person Camera
-// X Light change from directional to point/spot
-// X Comment and documentation
-// X Github
-
-
 //Headers used for the program
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -52,20 +40,21 @@ float cameraSpeed = 0.0f;
 //Defines the identity matrix for matrix transformations
 glm::mat4 identity = glm::mat4(1.0f);
 
-//Variable that controls the camera's view
+//Variables that control which state is active
 int camstate = 1;
+int lightstate = 1;
 
 //Array that defines the vertices for the cube in which the skybox will be placed
 float skyboxVertices[]
 {
-	-20.f, -20.f, 20.f,
-	20.f, -20.f, 20.f,
-	20.f, -20.f, -20.f,
-	-20.f, -20.f, -20.f,
-	-20.f, 20.f, 20.f,
-	20.f, 20.f, 20.f,
-	20.f, 20.f, -20.f,
-	-20.f, 20.f, -20.f
+	-200.f, -200.f, 200.f,
+	200.f, -200.f, 200.f,
+	200.f, -200.f, -200.f,
+	-200.f, -200.f, -200.f,
+	-200.f, 200.f, 200.f,
+	200.f, 200.f, 200.f,
+	200.f, 200.f, -200.f,
+	-200.f, 200.f, -200.f
 };
 
 //Array that defines the indices for the skybox that will be used in the scene
@@ -114,6 +103,7 @@ public:
 	std::stringstream vertStrStream;
 	std::stringstream fragStrStream;
 
+	//Variables for the textures and normal maps
 	GLuint texture;
 	GLuint texture2;
 	GLuint normal;
@@ -129,6 +119,7 @@ public:
 	int img_height, img_height2, img_height3;
 	int colorChannel, colorChannel2, colorChannel3;
 
+	//Variables to retrieve the relative path to the textures in the main function
 	unsigned char* picturepath;
 	unsigned char* picturepath2;
 	unsigned char* normalpath;
@@ -500,7 +491,7 @@ public:
 	glm::mat4 projection;
 	glm::mat4 view = glm::lookAt(cameraPos, centerPos, WorldUp);
 
-	//Variables used for the camera to omuse movement
+	//Variables used for the camera to mouse movement
 	float yaw = 90.0f;
 	float pitch = 0.0f;
 	float radius = 10.0f;
@@ -539,13 +530,20 @@ void input_callback(GLFWwindow* window, int key, int scancode, int action, int m
 	if (key == GLFW_KEY_1 && action == 1)
 	{
 		if (camstate == 1)
-		{
-			PlayerPOV.cameraPos = glm::vec3(0.0f, 0.0f, -10.0f);
 			camstate = 2;
-		}
 
 		else if (camstate == 2)
 			camstate = 1;			
+	}
+
+	//Allows the light to move from planet to the ship
+	if (key == GLFW_KEY_F && action == 1)
+	{
+		if (lightstate == 1)
+			lightstate = 2;
+
+		else if (lightstate == 2)
+			lightstate = 1;
 	}
 
 	//Allows the user to exit the program with the escape key
@@ -622,26 +620,30 @@ int main(void)
 
 	//Sets the path for the respective object files and calls the ObjectLoad() function
 	Ship.path = "3D/UFO.obj";
-	AmongUs.path = "3D/Among_Us.obj";
-	Asteroid.path = "3D/Asteroid.obj";
-	Moon.path = "3D/moon.obj";
-	Moon2.path = "3D/moon.obj";
-	Station.path = "3D/Station.obj";
-	
-	Planet.path = "3D/Earth.obj";
-
 	Ship.objectLoad();
+
+	AmongUs.path = "3D/Among_Us.obj";
 	AmongUs.objectLoad();
+
+	Asteroid.path = "3D/Asteroid.obj";
 	Asteroid.objectLoad();
+
+	Moon.path = "3D/moon.obj";
 	Moon.objectLoad();
+
+	Moon2.path = "3D/moon.obj";
 	Moon2.objectLoad();
+
+	Station.path = "3D/Station.obj";
 	Station.objectLoad();
+
+	Planet.path = "3D/Earth.obj";
 	Planet.objectLoad();
 
 	//Vertically flips the image to prevent an upside-down image
 	stbi_set_flip_vertically_on_load(true);
 
-	//Initializes the texture bytes for the respective objects
+	//Initializes the texture bytes and normal bytes for the main ship; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* ship_tex_bytes = stbi_load("3D/ufo_diffuse.png", &Ship.img_width, &Ship.img_height, &Ship.colorChannel, 0);
 	unsigned char* ship_tex_bytes2 = stbi_load("3D/ufo_diffuse_glow.png", &Ship.img_width2, &Ship.img_height2, &Ship.colorChannel2, 0);
 	unsigned char* ship_norm_bytes = stbi_load("3D/ufo_Normal.png", &Ship.img_width3, &Ship.img_height3, &Ship.colorChannel3, 0);
@@ -654,6 +656,7 @@ int main(void)
 	Ship.genTex2WA();
 	Ship.genNorm();
 
+	//Initializes the texture bytes and normal bytes for the Among Us Debris; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* among_tex_bytes = stbi_load("3D/Among_Diffuse.jpg", &AmongUs.img_width, &AmongUs.img_height, &AmongUs.colorChannel, 0);
 	unsigned char* among_tex_bytes2 = stbi_load("3D/Among_Reflect.jpg", &AmongUs.img_width2, &AmongUs.img_height2, &AmongUs.colorChannel2, 0);
 	unsigned char* among_norm_bytes = stbi_load("3D/Among_Normal.jpg", &AmongUs.img_width3, &AmongUs.img_height3, &AmongUs.colorChannel3, 0);
@@ -666,6 +669,7 @@ int main(void)
 	AmongUs.genTex2NA();
 	AmongUs.genNorm();
 
+	//Initializes the texture bytes and normal bytes for the Asteroid Debris; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* asteroid_tex_bytes = stbi_load("3D/Asteroid_Diffuse.jpg", &Asteroid.img_width, &Asteroid.img_height, &Asteroid.colorChannel, 0);
 	unsigned char* asteroid_norm_bytes = stbi_load("3D/Asteroid_Normal.jpg", &Asteroid.img_width2, &Asteroid.img_height2, &Asteroid.colorChannel2, 0);
 
@@ -675,6 +679,7 @@ int main(void)
 	Asteroid.genTexNA();
 	Asteroid.genNorm();
 
+	//Initializes the texture bytes and normal bytes for the First Moon Debris; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* moon_tex_bytes = stbi_load("3D/Moon_Diffuse.jpg", &Moon.img_width, &Moon.img_height, &Moon.colorChannel, 0);
 	unsigned char* moon_norm_bytes = stbi_load("3D/Moon_Normal.jpg", &Moon.img_width2, &Moon.img_height2, &Moon.colorChannel2, 0);
 
@@ -684,10 +689,12 @@ int main(void)
 	Moon.genTexNA();
 	Moon.genNorm();
 
+	//Initializes the texture bytes and normal bytes for the Second Moon Debris; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* moon2_tex_bytes = stbi_load("3D/Moon2_Diffuse.png", &Moon2.img_width, &Moon2.img_height, &Moon2.colorChannel, 0);
 	Moon2.picturepath = moon2_tex_bytes;
 	Moon2.genTexWA();
 
+	//Initializes the texture bytes and normal bytes for the Space Station Debris; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* station_tex_bytes = stbi_load("3D/Station_Base.png", &Station.img_width, &Station.img_height, &Station.colorChannel, 0);
 	unsigned char* station_tex_bytes2 = stbi_load("3D/Station_Foil.png", &Station.img_width2, &Station.img_height2, &Station.colorChannel2, 0);
 	unsigned char* station_norm_bytes = stbi_load("3D/Station_Normal.png", &Station.img_width3, &Station.img_height3, &Station.colorChannel3, 0);
@@ -700,6 +707,7 @@ int main(void)
 	Station.genTex2NA();
 	Station.genNorm();
 
+	//Initializes the texture bytes and normal bytes for the Main Planet; assigns the retrieved relative path to pass onto the texture functions
 	unsigned char* planet_tex_bytes = stbi_load("3D/Earth_Diffuse.jpg", &Planet.img_width, &Planet.img_height, &Planet.colorChannel, 0);
 	unsigned char* planet_tex_bytes2 = stbi_load("3D/Earth_Clouds.jpg", &Planet.img_width2, &Planet.img_height2, &Planet.colorChannel2, 0);
 	unsigned char* planet_norm_bytes = stbi_load("3D/Earth_Normal.jpg", &Planet.img_width3, &Planet.img_height3, &Planet.colorChannel3, 0);
@@ -852,7 +860,6 @@ int main(void)
 	//Variables used for the rotation of the object (Time & Rotation value)
 	float lastTime = glfwGetTime();
 	float rotation = 0.0f;
-	float shipRot = 0.0f;
 
 	//Loops until the user closes the window
 	while (!glfwWindowShouldClose(window))
@@ -889,17 +896,11 @@ int main(void)
 		unsigned int skyboxProjLoc = glGetUniformLocation(Background.shaderProgram, "projection");
 		glUniformMatrix4fv(skyboxProjLoc, 1, GL_FALSE, glm::value_ptr(PlayerPOV.projection));
 
-		MainLight.lightPos = Planet.position;
-
 		//Uses perspective projection for the camera once the camera state is set to 1
 		if (camstate == 1)
 		{
-			if (PlayerPOV.cameraPos == glm::vec3(0.0f, 60.0f, 30.0f))
-			{
-				PlayerPOV.cameraPos.x = 0.0f;
-				PlayerPOV.cameraPos.y = Ship.position.y + 3.0f;
-				PlayerPOV.cameraPos.z = Ship.position.z - 15.0f;
-			}
+			if (PlayerPOV.cameraPos == glm::vec3(0.0f, 65.0f, 100.0f))
+				PlayerPOV.cameraPos = glm::vec3(0.0f, 3.0f, -15.0f) + Ship.position;
 
 			//Changes the view matrix to perspective view
 			PlayerPOV.view = glm::lookAt(PlayerPOV.cameraPos, PlayerPOV.cameraPos + PlayerPOV.F, PlayerPOV.WorldUp);
@@ -941,19 +942,41 @@ int main(void)
 				PlayerPOV.cameraPos.y = PlayerPOV.cameraPos.y - cameraSpeed;
 				Ship.position.y -= cameraSpeed;
 			}
+
 		}
 
 		//Uses orthographic projection for the camera once the camera state is set to 2
 		if (camstate == 2)
 		{
-			//Resets camera position and locks it in place
-			PlayerPOV.cameraPos = glm::vec3(0.0f, 30.0f, 30.0f);
+			//Sets the camera position accordingly
+			PlayerPOV.cameraPos = glm::vec3(0.0f, 65.0f, 100.0f);
 			PlayerPOV.F = glm::normalize(PlayerPOV.centerPos - PlayerPOV.cameraPos);
 
 			//Changes the view matrix and uses orthographic view
 			PlayerPOV.view = glm::lookAt(PlayerPOV.cameraPos, PlayerPOV.centerPos, PlayerPOV.WorldUp);
-			PlayerPOV.projection = glm::ortho(-15.0f, 15.0f, -15.0f, 15.0f, -1.0f, 100.0f);
+			PlayerPOV.projection = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1.0f, 200.0f);
+
+			//Enables WASD to pan in orthographic view
+			if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+				PlayerPOV.centerPos.y += 0.1f;
+
+			if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+				PlayerPOV.centerPos.y -= 0.1f;
+
+			if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+				PlayerPOV.centerPos.x += 0.1f;
+
+			if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+				PlayerPOV.centerPos.x -= 0.1f;
 		}
+
+		//Sets the light position to the planet by default
+		if (lightstate == 1)
+			MainLight.lightPos = Planet.position;
+
+		//Sets the light position to the ship
+		if (lightstate == 2)
+			MainLight.lightPos = Ship.position;
 
 		glBindVertexArray(sVAO);
 		glActiveTexture(GL_TEXTURE0);
@@ -1052,7 +1075,7 @@ This is to certify that this project is my own work, based on my personal effort
 learned. I have constructed the functions and their respective algorithms and corresponding code by myself. The program
 was run, tested, and debugged by my own efforts.  I further certify that I have not copied in part or whole or otherwise
 plagiarized the work of other students and/or persons for the coding process. 3D Objects used fall under free use, and
-is credited.
+is credited. Please refer to the document
 
 										  Marc Lawrence C. Galura, DLSU ID# 12023817
 
